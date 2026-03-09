@@ -1,0 +1,15 @@
+pandas
+numpy
+prophet
+scikit-learn
+matplotlib
+plotly
+streamlit
+fastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+langchain
+langchain-openai
+python-dotenv
+openai
