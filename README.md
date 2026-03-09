@@ -9,7 +9,7 @@ An AI-powered forecasting system combining Streamlit frontend, agentic AI orches
 
 ### System Architecture
 
-```mermaid
+
 
                                 User
                                 │
@@ -29,10 +29,9 @@ An AI-powered forecasting system combining Streamlit frontend, agentic AI orches
                 Forecast Model       PostgreSQL DB
                                         (Dataset)
 
-```
 ### Workflow
 
-```mermaid
+
 
                            User Prompt
                                 ↓
@@ -47,4 +46,4 @@ An AI-powered forecasting system combining Streamlit frontend, agentic AI orches
                     Agent summarizes result
                                 ↓
                     Streamlit displays answer + chart
-```
+
