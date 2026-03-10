@@ -4,18 +4,37 @@ import sys
 import os
 import matplotlib.pyplot as plt
 
+## Add project root to python path
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(ROOT_DIR)
 
-from backend.inventory_optimizer import calculate_inventory_metrics
-from backend.forecasting import forecast_top_product
-from backend.forecasting import forecast_product
-from backend.data_loader import get_all_products
+from backend.inventory_optimizer import detect_inventory_risk , generate_supply_chain_insights
+from backend.forecasting import forecast_top_products, forecast_product
+from backend.data_loader import (
+    get_all_products,
+    get_top_products,
+    demand_by_region,
+    demand_by_category,
+    sales_by_market,
+    late_delivery_analysis,
+    sales_by_customer_segment
+)
 from backend.agent.agent import create_agent
+
+
+
+
+
 
 st.set_page_config(page_title="Inventory Optimization Dashboard", layout="wide")
 
 st.title("AI Inventory Optimization Dashboard")
+
+if "forecast" not in st.session_state:
+    st.session_state["forecast"] = None
+
+if "metrics" not in st.session_state:
+    st.session_state["metrics"] = None
 
 products = get_all_products()
 
@@ -24,12 +43,17 @@ selected_product = st.selectbox(
     products
 )
 
+forecast = st.session_state.get("forecast")
+metrics = st.session_state.get("metrics")
 if st.button("Run Forecast"):
 
-    forecast, product = forecast_product(selected_product)
+    forecast, product, metrics = forecast_product(selected_product)
 
-    metrics = calculate_inventory_metrics(selected_product)
+    #metrics = calculate_inventory_metrics(selected_product)
 
+    st.session_state["forecast"] = forecast
+    st.session_state["metrics"] = metrics
+    
     st.subheader("Inventory Metrics")
 
     st.write("Average Daily Demand:", round(metrics["average_daily_demand"],2))
@@ -53,93 +77,114 @@ if st.button("Run Forecast"):
 
     st.pyplot(fig)
 
-from backend.agent.agent import create_agent
-
 st.header("AI Supply Chain Assistant")
 
 question = st.text_input("Ask a question")
 
+
 if st.button("Ask AI"):
 
-    response = create_agent(question, selected_product)
+    if question.strip() == "":
+        st.warning("Please enter a question.")
+    else:
+        response = create_agent(question, selected_product)
+        st.write(response)
 
-    st.write(response)
-#############################################################################
+    # Retrieve stored forecast and metrics
+    forecast = st.session_state.get("forecast")
+    metrics = st.session_state.get("metrics")
 
-# st.title("📦 AI Inventory Optimization & Demand Forecasting")
+    # Demand Trend
+    if forecast is not None:
 
-# # Get forecast and metrics
-# forecast, product = forecast_top_product()
-# metrics = calculate_inventory_metrics()
+        st.subheader("Demand Trend")
 
-# # --- Product Info ---
-# st.subheader("Top Selling Product")
-# st.write(product)
+        trend = forecast[['ds','yhat']].set_index('ds')
 
-# # --- Inventory Metrics ---
-# st.subheader("Inventory Metrics")
+        st.line_chart(trend)
 
-# col1, col2, col3, col4 = st.columns(4)
+    # Inventory Risk
+    if metrics is not None:
 
-# col1.metric("Average Daily Demand", round(metrics["average_daily_demand"],2))
-# col2.metric("Safety Stock", round(metrics["safety_stock"],2))
-# col3.metric("Reorder Point", round(metrics["reorder_point"],2))
-# col4.metric("Optimal Inventory", round(metrics["optimal_inventory"],2))
+        st.subheader("Inventory Risk")
 
-# # --- Forecast Chart ---
-# st.subheader("Demand Forecast")
+        risk = detect_inventory_risk(metrics)
 
-# forecast_chart = forecast[['ds','yhat']].set_index('ds')
-
-# st.line_chart(forecast_chart)
+        st.warning(risk)
 
 
 
+st.header("Top Selling Products")
+top_products = get_top_products()
+st.dataframe(top_products)
+st.bar_chart(top_products.set_index("Product Name")["total_sales"])
 
-#########################################
-# import streamlit as st
-# import sys
-# import os
-# import matplotlib.pyplot as plt
+## regional analytics
+region_sales = demand_by_region()
+st.bar_chart(region_sales.set_index("Order Region"))
 
-# sys.path.append(os.path.abspath("../backend"))
+## displaying mae and rmse
 
-# from inventory_optimizer import calculate_inventory_metrics
-# from forecasting import forecast_top_product
+if metrics is not None: 
+    st.subheader("Forecast Accuracy")
+
+    col1, col2, col3 = st.columns(3)
+
+    col1.metric("MAE", round(metrics["MAE"],2))
+    col2.metric("RMSE", round(metrics["RMSE"],2))
+    col3.metric("MAPE (%)", round(metrics["MAPE"],2))
+
+    st.subheader("Supply Chain Risk")
+
+    risk = detect_inventory_risk(metrics)
+
+    st.warning(risk)
+    st.subheader("AI Supply Chain Advisor")
+
+    insights = generate_supply_chain_insights(
+        selected_product,
+        metrics,
+        forecast
+    )
+
+    st.info(insights)
 
 
-# st.title("Inventory Optimization & Demand Forecasting Dashboard")
+# Demand by Category
+st.header("Demand by Category")
 
-# # Button to run analysis
-# if st.button("Run Forecast & Inventory Optimization"):
+category_sales = demand_by_category()
 
-#     forecast, product = forecast_top_product()
-#     metrics = calculate_inventory_metrics()
+st.bar_chart(category_sales.set_index("Category Name")["total_sales"])
 
-#     st.subheader("Top Product")
-#     st.write(product)
+#Sales by Market
+st.header("Sales by Market")
 
-#     st.subheader("Inventory Metrics")
+market_sales = sales_by_market()
 
-#     st.write("Average Daily Demand:", round(metrics["average_daily_demand"],2))
-#     st.write("Safety Stock:", round(metrics["safety_stock"],2))
-#     st.write("Reorder Point:", round(metrics["reorder_point"],2))
-#     st.write("Optimal Inventory:", round(metrics["optimal_inventory"],2))
+st.bar_chart(market_sales.set_index("Market")["total_sales"])
 
 
-#     st.subheader("Demand Forecast")
+# Delivery Performance
+st.header("Delivery Performance")
 
-#     fig, ax = plt.subplots(figsize=(12,6))
+delivery_status = late_delivery_analysis()
 
-#     ax.plot(forecast['ds'], forecast['yhat'], label="Forecast")
-#     ax.fill_between(
-#         forecast['ds'],
-#         forecast['yhat_lower'],
-#         forecast['yhat_upper'],
-#         alpha=0.3
-#     )
+st.bar_chart(delivery_status.set_index("Delivery Status")["total_orders"])
 
-#     ax.set_title(f"Demand Forecast for {product}")
-#     ax.legend()
+# Customer Segment Sales
 
-#     st.pyplot(fig)
+st.header("Customer Segment Sales")
+
+segment_sales = sales_by_customer_segment()
+
+st.bar_chart(segment_sales.set_index("Customer Segment")["total_sales"])
+
+
+st.header("Multi-Product Forecast")
+
+multi_forecast = forecast_top_products()
+
+st.dataframe(multi_forecast)
+
+st.bar_chart(multi_forecast.set_index("Product")["Forecast Demand"])

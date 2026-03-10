@@ -1,9 +1,11 @@
 #import pandas as pd
 #from prophet import Prophet
 import os
-from .data_loader import get_top_selling_product, get_product_sales
+from .data_loader import get_top_selling_product, get_product_sales,get_top_products
 import pandas as pd
 from prophet import Prophet
+from sklearn.metrics import mean_absolute_error, mean_squared_error
+import numpy as np
 
 
 def run_prophet_forecast(df):
@@ -126,8 +128,81 @@ def forecast_product(product_name):
 
     forecast = model.predict(future)
 
-    return forecast, product_name
+    # Evaluate forecast using historical data
+    actual = prophet_df["y"]
+    predicted = forecast["yhat"][:len(actual)]
 
+    metrics = evaluate_forecast(actual, predicted)
+
+    return forecast, product_name, metrics
+
+
+
+def forecast_multiple_products(n=10):
+
+    top_products = get_top_products(n)
+
+    forecasts = {}
+
+    for _, row in top_products.iterrows():
+
+        product = row["Product Name"]
+
+        forecast, _ = forecast_product(product)
+
+        forecasts[product] = forecast
+
+    return forecasts
+
+
+# def forecast_accuracy(actual, predicted):
+
+#     mae = mean_absolute_error(actual, predicted)
+
+#     rmse = np.sqrt(mean_squared_error(actual, predicted))
+
+#     return {
+#         "MAE": mae,
+#         "RMSE": rmse
+#     }
+
+def evaluate_forecast(actual, forecast):
+
+    actual = actual.reset_index(drop=True)
+    forecast = forecast.reset_index(drop=True)
+
+    mae = mean_absolute_error(actual, forecast)
+
+    rmse = np.sqrt(mean_squared_error(actual, forecast))
+
+    mape = np.mean(np.abs((actual - forecast) / actual)) * 100
+
+    return {
+        "MAE": mae,
+        "RMSE": rmse,
+        "MAPE": mape
+    }
+
+
+def forecast_top_products(n=5):
+
+    products = get_top_products()
+
+    results = []
+
+    for product in products["Product Name"][:n]:
+
+        forecast, _, metrics = forecast_product(product)
+
+        avg_demand = forecast["yhat"].mean()
+
+        results.append({
+            "Product": product,
+            "Forecast Demand": avg_demand,
+            "MAPE": metrics["MAPE"]
+        })
+
+    return pd.DataFrame(results)
 #def forecast_product(product_name):
 
     print("Product:", product_name)
