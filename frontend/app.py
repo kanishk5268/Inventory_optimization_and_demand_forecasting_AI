@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(ROOT_DIR)
 
-from backend.inventory_optimizer import detect_inventory_risk , generate_supply_chain_insights
+from backend.inventory_optimizer import calculate_inventory_metrics,detect_inventory_risk , generate_supply_chain_insights
 from backend.forecasting import forecast_top_products, forecast_product
 from backend.data_loader import (
     get_all_products,
@@ -20,10 +20,6 @@ from backend.data_loader import (
     sales_by_customer_segment
 )
 from backend.agent.agent import create_agent
-
-
-
-
 
 
 st.set_page_config(page_title="Inventory Optimization Dashboard", layout="wide")
@@ -45,11 +41,14 @@ selected_product = st.selectbox(
 
 forecast = st.session_state.get("forecast")
 metrics = st.session_state.get("metrics")
+
 if st.button("Run Forecast"):
 
-    forecast, product, metrics = forecast_product(selected_product)
+    forecast, product, forecast_metrics = forecast_product(selected_product)
 
-    #metrics = calculate_inventory_metrics(selected_product)
+    inventory_metrics = calculate_inventory_metrics(forecast, selected_product)
+
+    metrics = {**forecast_metrics, **inventory_metrics}
 
     st.session_state["forecast"] = forecast
     st.session_state["metrics"] = metrics

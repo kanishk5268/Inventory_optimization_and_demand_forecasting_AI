@@ -148,23 +148,13 @@ def forecast_multiple_products(n=10):
 
         product = row["Product Name"]
 
-        forecast, _ = forecast_product(product)
+        forecast, _, _ = forecast_product(product)
 
         forecasts[product] = forecast
 
     return forecasts
 
 
-# def forecast_accuracy(actual, predicted):
-
-#     mae = mean_absolute_error(actual, predicted)
-
-#     rmse = np.sqrt(mean_squared_error(actual, predicted))
-
-#     return {
-#         "MAE": mae,
-#         "RMSE": rmse
-#     }
 
 def evaluate_forecast(actual, forecast):
 
@@ -186,11 +176,11 @@ def evaluate_forecast(actual, forecast):
 
 def forecast_top_products(n=5):
 
-    products = get_top_products()
+    products = get_top_products(n)
 
     results = []
 
-    for product in products["Product Name"][:n]:
+    for product in products["Product Name"]:
 
         forecast, _, metrics = forecast_product(product)
 
@@ -203,103 +193,3 @@ def forecast_top_products(n=5):
         })
 
     return pd.DataFrame(results)
-#def forecast_product(product_name):
-
-    print("Product:", product_name)
-
-    # Load product sales
-    daily_sales = get_product_sales(product_name)
-
-    print("Incoming Columns:", daily_sales.columns)
-
-    # Rename columns for Prophet
-    prophet_df = daily_sales.rename(
-        columns={
-            "order_date": "ds",
-            "sales": "y"
-        }
-    )
-
-    # Ensure datetime format
-    prophet_df["ds"] = pd.to_datetime(prophet_df["ds"])
-
-    # -------------------------------
-    # Load holidays file safely
-    # -------------------------------
-    BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    holiday_path = os.path.join(BASE_DIR, "data", "puertorican_holidays.csv")
-
-    holidays = pd.read_csv(holiday_path)
-
-    holidays = holidays.rename(
-        columns={
-            "Date": "ds",
-            "Name": "holiday"
-        }
-    )
-
-    holidays["ds"] = pd.to_datetime(holidays["ds"])
-
-    # Prophet expects only these columns
-    holidays = holidays[["ds", "holiday"]]
-
-    # -------------------------------
-    # Train Prophet model
-    # -------------------------------
-    model = Prophet(holidays=holidays)
-
-    model.fit(prophet_df)
-
-    # Forecast next 365 days
-    future = model.make_future_dataframe(periods=365)
-
-    forecast = model.predict(future)
-
-    return forecast, product_name
-
-
-#def forecast_product(product_name):
-
-    print("Product:", product_name)
-
-    daily_sales = get_product_sales(product_name)
-
-    print("Incoming Columns:", daily_sales.columns)
-
-    prophet_df = daily_sales.rename(
-        columns={
-            "order_date": "ds",
-            "sales": "y"
-        }
-    )
-
-    prophet_df["ds"] = pd.to_datetime(prophet_df["ds"])
-
-    holidays = pd.read_csv( r"D:\Inventory_Optimization_and_Demand_forecasting\data\puertorican_holidays.csv")
-    # BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-
-    # holiday_path = os.path.join(BASE_DIR, "data", "puertorican_holidays.csv")
-
-    # holidays = pd.read_csv(holiday_path)
-
-    
-
-
-    holidays = holidays.rename(
-        columns={
-            "Date": "ds",
-            "Name": "holiday"
-        }
-    )
-
-    holidays["ds"] = pd.to_datetime(holidays["ds"])
-
-    model = Prophet(holidays=holidays)
-
-    model.fit(prophet_df)
-
-    future = model.make_future_dataframe(periods=365)
-
-    forecast = model.predict(future)
-
-    return forecast, product_name
