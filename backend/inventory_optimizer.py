@@ -27,15 +27,15 @@ def calculate_inventory_metrics(forecast, product_name):
         "optimal_inventory": round(optimal_inventory,2)
     }
 
-def detect_inventory_risk(metrics):
+# def detect_inventory_risk(metrics):
 
-    if metrics["optimal_inventory"] < metrics["reorder_point"]:
-        return "⚠️ Risk of stockout"
+#     if metrics["optimal_inventory"] < metrics["reorder_point"]:
+#         return "⚠️ Risk of stockout"
 
-    if metrics["optimal_inventory"] > metrics["reorder_point"] * 2:
-        return "⚠️ Overstock risk"
+#     if metrics["optimal_inventory"] > metrics["reorder_point"] * 2:
+#         return "⚠️ Overstock risk"
 
-    return "Inventory levels healthy"
+#     return "Inventory levels healthy"
 
 def detect_inventory_risk(metrics):
 

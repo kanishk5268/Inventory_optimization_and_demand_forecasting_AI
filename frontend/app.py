@@ -76,6 +76,29 @@ if st.button("Run Forecast"):
 
     st.pyplot(fig)
 
+    if metrics is not None: 
+        st.subheader("Forecast Accuracy")
+
+        col1, col2, col3 = st.columns(3)
+
+        col1.metric("MAE", round(metrics["MAE"],2))
+        col2.metric("RMSE", round(metrics["RMSE"],2))
+        col3.metric("MAPE (%)", round(metrics["MAPE"],2))
+
+        st.subheader("Supply Chain Risk")
+
+        risk = detect_inventory_risk(metrics)
+
+        st.warning(risk)
+        st.subheader("AI Supply Chain Advisor")
+
+        insights = generate_supply_chain_insights(
+            selected_product,
+            metrics,
+            forecast
+        )
+
+        st.info(insights)
 st.header("AI Supply Chain Assistant")
 
 question = st.text_input("Ask a question")
@@ -124,29 +147,29 @@ st.bar_chart(region_sales.set_index("Order Region"))
 
 ## displaying mae and rmse
 
-if metrics is not None: 
-    st.subheader("Forecast Accuracy")
+# if metrics is not None: 
+#     st.subheader("Forecast Accuracy")
 
-    col1, col2, col3 = st.columns(3)
+#     col1, col2, col3 = st.columns(3)
 
-    col1.metric("MAE", round(metrics["MAE"],2))
-    col2.metric("RMSE", round(metrics["RMSE"],2))
-    col3.metric("MAPE (%)", round(metrics["MAPE"],2))
+#     col1.metric("MAE", round(metrics["MAE"],2))
+#     col2.metric("RMSE", round(metrics["RMSE"],2))
+#     col3.metric("MAPE (%)", round(metrics["MAPE"],2))
 
-    st.subheader("Supply Chain Risk")
+#     st.subheader("Supply Chain Risk")
 
-    risk = detect_inventory_risk(metrics)
+#     risk = detect_inventory_risk(metrics)
 
-    st.warning(risk)
-    st.subheader("AI Supply Chain Advisor")
+#     st.warning(risk)
+#     st.subheader("AI Supply Chain Advisor")
 
-    insights = generate_supply_chain_insights(
-        selected_product,
-        metrics,
-        forecast
-    )
+#     insights = generate_supply_chain_insights(
+#         selected_product,
+#         metrics,
+#         forecast
+#     )
 
-    st.info(insights)
+#     st.info(insights)
 
 
 # Demand by Category
