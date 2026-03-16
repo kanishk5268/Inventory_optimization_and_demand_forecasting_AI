@@ -7,20 +7,25 @@ def generate_sql(question):
     prompt = f"""
 You are a supply chain data analyst.
 
-Convert the following question into a PostgreSQL SQL query.
+Convert the question into a PostgreSQL SQL query.
 
-Database table: supplychain_data
+Table: supplychain_data
 
-Columns include:
-Product Name
-Sales
-Category Name
-Market
-Order Region
-Customer Segment
-Delivery Status
+Columns:
+"Product Name"
+"Sales"
+"Category Name"
+"Market"
+"Order Region"
+"Customer Segment"
+"Delivery Status"
 
-Return ONLY the SQL query.
+Rules:
+1. Always wrap column names in DOUBLE QUOTES.
+2. Column names contain spaces.
+3. Return ONLY the SQL query.
+4. Do NOT include explanations.
+5. Do NOT include markdown.
 
 Question: {question}
 """
@@ -31,6 +36,13 @@ Question: {question}
     )
 
     sql_query = response["message"]["content"]
+
+    # remove markdown
+    sql_query = sql_query.replace("```sql", "").replace("```", "").strip()
+
+    # keep only SQL part
+    if "SELECT" in sql_query:
+        sql_query = sql_query[sql_query.index("SELECT"):]
 
     return sql_query
 
